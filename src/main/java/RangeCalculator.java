@@ -6,15 +6,30 @@ import java.util.Map;
 public class RangeCalculator {
 
     public Map<String, BigDecimal> calculate(List<String> ranges) throws InterruptedException {
+        Map<Thread, MyRunnable> threadToRunnable = initializeThreadsWithRanges(ranges);
+        startThreads(threadToRunnable);
+        return getResults(threadToRunnable);
+    }
+
+    private Map<Thread, MyRunnable> initializeThreadsWithRanges(List<String> ranges) {
         Map<Thread, MyRunnable> threadToRunnable = new HashMap<>(ranges.size());
-        Map<String, BigDecimal> rangeToResult = new HashMap<>(ranges.size());
 
         for (String range : ranges) {
             MyRunnable myRunnable = new MyRunnable(range);
-            Thread thread = new Thread(myRunnable);
+            Thread thread = new Thread(myRunnable, range);
             threadToRunnable.put(thread, myRunnable);
+        }
+        return threadToRunnable;
+    }
+
+    private void startThreads(Map<Thread, MyRunnable> threadToRunnable) {
+        for (Thread thread : threadToRunnable.keySet()) {
             thread.start();
         }
+    }
+
+    private Map<String, BigDecimal> getResults(Map<Thread, MyRunnable> threadToRunnable) throws InterruptedException {
+        Map<String, BigDecimal> rangeToResult = new HashMap<>(threadToRunnable.size());
 
         for (Map.Entry<Thread, MyRunnable> entry : threadToRunnable.entrySet()) {
             entry.getKey().join();
@@ -24,7 +39,7 @@ public class RangeCalculator {
         return rangeToResult;
     }
 
-    public static class MyRunnable implements Runnable {
+    private static class MyRunnable implements Runnable {
         private final String range;
         private BigDecimal sum;
 
@@ -36,8 +51,8 @@ public class RangeCalculator {
         @Override
         public void run() {
             String[] split = range.split(",");
-            int start = Integer.parseInt(split[0]);
-            int end = Integer.parseInt(split[1]);
+            long start = Long.parseLong(split[0]);
+            long end = Long.parseLong(split[1]);
 
             for (long i = start; i < end; i++) {
                 sum = sum.add(BigDecimal.valueOf(i * i));
