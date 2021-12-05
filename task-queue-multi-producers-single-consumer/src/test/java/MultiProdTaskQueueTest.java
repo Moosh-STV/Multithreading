@@ -16,6 +16,19 @@ public class MultiProdTaskQueueTest {
     }
 
     @Test
+    public void runTasksSuccessfullyUsingNewThreadAfterQueueIsEmpty() throws InterruptedException {
+        taskQueue = new MultiProdTaskQueue();
+        runTasks();
+        assertFalse(taskQueue.getQueue().isEmpty());
+        Thread.sleep(1000);
+        assertTrue(taskQueue.getQueue().isEmpty());
+
+        runTasks();
+        Thread.sleep(1000);
+        assertTrue(taskQueue.getQueue().isEmpty());
+    }
+
+    @Test
     public void closeAndRunTasks() throws InterruptedException {
         taskQueue = new MultiProdTaskQueue();
         runTasks();
