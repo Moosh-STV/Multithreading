@@ -36,9 +36,11 @@ public class MultiProdTaskQueue implements TaskQueue {
     }
 
     private class ConsumerThread implements Runnable {
+        private Runnable task;
         private Thread consumer;
 
         ConsumerThread() {
+            task = null;
             consumer = null;
         }
 
@@ -51,10 +53,13 @@ public class MultiProdTaskQueue implements TaskQueue {
 
         @Override
         public void run() {
-            synchronized (tasks) {
-                while (!tasks.isEmpty()) {
-                    tasks.poll().run();
+            while (true) {
+                synchronized (tasks) {
+                    if (!tasks.isEmpty()) {
+                        task = tasks.poll();
+                    }else break;
                 }
+                task.run();
             }
             consumer = null;
         }
